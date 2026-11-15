@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Instructor tool: run the course lifecycle on the GitHub organization.
 #
-#   ./course.sh create-repos              team repos from the template, one GitHub team each (write access)
+#   ./course.sh create-repos              team repos from the template (team.yaml set per team)
+#   ./course.sh create-teams              one GitHub team per repo, with write access
 #   ./course.sh invite roster.csv         invite students into their team (org invitation by email)
 #   ./course.sh codespaces-on roster.csv  the org pays Codespaces for the students in the roster only
 #   ./course.sh status                    codespaces, pending invitations, teams
@@ -29,7 +30,7 @@ need_roster() { [ -n "${1:-}" ] && [ -f "$1" ] || { echo "usage: $0 $CMD roster.
 create_repos() {
   gh api -X PATCH "repos/$ORG/$TEMPLATE" -F is_template=true >/dev/null
   for n in $(seq 1 "$TEAMS"); do
-    repo="$PREFIX-$n"; team="$PREFIX-$n"; ds=$(dataset_for "$n")
+    repo="$PREFIX-$n"; ds=$(dataset_for "$n")
     if gh repo view "$ORG/$repo" >/dev/null 2>&1; then
       say "$ORG/$repo exists"
     else
@@ -49,6 +50,12 @@ create_repos() {
       git -C "$tmp" push -q
       rm -rf "$tmp"
     fi
+  done
+}
+
+create_teams() {
+  for n in $(seq 1 "$TEAMS"); do
+    repo="$PREFIX-$n"; team="$PREFIX-$n"
     if ! gh api "orgs/$ORG/teams/$team" >/dev/null 2>&1; then
       say "creating team $team"
       gh api "orgs/$ORG/teams" -f name="$team" -f privacy=closed \
@@ -134,6 +141,7 @@ offboard() {
 CMD="${1:-}"; shift || true
 case "$CMD" in
   create-repos) create_repos ;;
+  create-teams) create_teams ;;
   invite) invite "$@" ;;
   codespaces-on) codespaces_on "$@" ;;
   status) status ;;
@@ -141,5 +149,5 @@ case "$CMD" in
   end-course) end_course ;;
   delete-codespaces) delete_codespaces ;;
   offboard) offboard "$@" ;;
-  *) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+  *) sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
 esac

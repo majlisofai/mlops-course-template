@@ -31,6 +31,7 @@ gh auth refresh -h github.com -s admin:org,codespace
 3. **Repos and teams**:
    ```bash
    scripts/instructor/course.sh create-repos
+   scripts/instructor/course.sh create-teams
    ```
 4. **Invite the students.** Copy `scripts/instructor/roster.example.csv` to `roster.csv` (git-ignored) with one `github_username,team` line per student, then run:
    ```bash
